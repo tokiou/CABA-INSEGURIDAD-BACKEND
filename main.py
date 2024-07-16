@@ -102,6 +102,7 @@ async def websocket_endpoint(websocket: WebSocket):
         print(f"WebSocket connection error: {e}")
         if os.path.exists(MAP_INICIAL_FILE_PATH + session_id + '.html'):
             os.remove(MAP_INICIAL_FILE_PATH + session_id + '.html')
+        if os.path.exists(MAP_INICIAL_FILE_PATH + session_id + '.html'):
             os.remove(MAP_FILE_PATH + session_id + '.html')
         await websocket.send_text(f"Error en el servidor: {str(e)}")
     finally:
