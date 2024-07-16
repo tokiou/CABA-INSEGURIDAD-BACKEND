@@ -1,7 +1,6 @@
-from geopy.point import Point
-from geopy.distance import distance as ds
 from itertools import cycle
 import folium
+import asyncio
 
 colors = ['red', 'blue', 'green', 'purple', 'orange', 'darkred',
           'lightred', 'beige', 'darkblue', 'darkgreen', 'cadetblue',
@@ -12,29 +11,25 @@ colors = ['red', 'blue', 'green', 'purple', 'orange', 'darkred',
 color_cycle = cycle(colors)
 
 
-def move_coordinate(lon, lat, distance_meters, bearing):
-    original_point = Point(lat, lon)
-    destination = ds(meters=distance_meters).destination(original_point, bearing)
-    return destination.longitude, destination.latitude
-
-
-def insecure(longitud, latitud, collection):
+async def insecure(longitud, latitud, collection):
     point_list = []
-    for doc in collection.find({"location": {
-                                "$nearSphere": {
-                                    "$geometry": {
-                                        "type": "Point",
-                                        "coordinates": [longitud, latitud]
-                                    },
-                                    "$maxDistance": 1}}}):
+    cursor = collection.find({"location": {
+        "$nearSphere": {
+            "$geometry": {
+                "type": "Point",
+                "coordinates": [longitud, latitud]
+            },
+            "$maxDistance": 1
+        }
+    }})
+    async for doc in cursor:
         point_list.append(doc['location']['coordinates'])
     return len(point_list), point_list
 
 
-def create_route(coordinates, estado, avoid_coordinates, client_ors):
-    # multi_polygon = MultiPolygon([Polygon(poly['coordinates'][0]) for poly in avoid_coordinates])
-    # print(geometry.mapping(multi_polygon))
-    route = client_ors.directions(
+async def create_route(coordinates, estado, avoid_coordinates, client_ors):
+    route = await asyncio.to_thread(
+        client_ors.directions,
         coordinates=coordinates,
         profile=estado,
         format='geojson',
@@ -44,7 +39,7 @@ def create_route(coordinates, estado, avoid_coordinates, client_ors):
     return route
 
 
-def route_points(route):
+async def route_points(route):
     x_list = []
     y_list = []
     for coordinate in route['features'][0]['geometry']['coordinates']:
@@ -53,7 +48,7 @@ def route_points(route):
     return x_list, y_list
 
 
-def add_route_to_map(m, routes_and_robos, lista_ordenada):
+async def add_route_to_map(m, routes_and_robos, lista_ordenada):
     # Obtener los límites de robos mínimo y máximo
     min_robos = lista_ordenada[0]
     max_robos = lista_ordenada[-1]
