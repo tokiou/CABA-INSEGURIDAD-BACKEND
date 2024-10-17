@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 load_dotenv('.env')
 
 app = FastAPI()
+# MAP url
 MAP_FILE_PATH = os.environ.get("MAP_FILE_PATH")
 MAP_INICIAL_FILE_PATH = os.environ.get("MAP_INICIAL_FILE_PATH")
 ALLOW_ORIGINS = os.environ.get("ALLOW_ORIGINS")
